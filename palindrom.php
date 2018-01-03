@@ -16,9 +16,10 @@ $matrix = []; //Массив для результатов вычислений
 $arr = []; // Массив для проверки данных массива $matrix
 
 //Проверяем существует ли файл "data.json" с результатами вычислений
-if (file_exists('data.json'))
+var_dump(__DIR__);
+if (file_exists(__DIR__.'/data.json'))
 {
-    $file = file_get_contents('data.json', 'a+');
+    $file = file_get_contents(__DIR__.'/data.json', 'a+');
 
     // Записываем данные из файла в массив и находим максимальное значение сомножителя
     $matrix = json_decode($file, TRUE);
@@ -99,10 +100,10 @@ if (isset($argv[1]))
     echo "Затраченное время: ".$dateStop."\n";
 
     // Записываем обновленные данные вычислений в файл
-    file_put_contents('data.json', json_encode($matrix));
+    file_put_contents(__DIR__.'/data.json', json_encode($matrix));
 }
 else
 {
-    echo "Запустить из консоли, командой \"php palindrom.php 99999\", где 99999 - необходимый, максимальный сомножитель";
+    echo "Запустить из консоли, командой \"php palindrom.php 99999\", где 99999 - необходимый, максимальный сомножитель \n";
 }
 
