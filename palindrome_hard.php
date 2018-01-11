@@ -2,8 +2,8 @@
 
 // Запустить из консоли, командой "php palindrome_hard.php"
 
-$maxCoFactor = 999; // Максимальный сомножитель
-$minCoFactor = 100; // Минимальный сомножитель
+$maxCoFactor = 99999; // Максимальный сомножитель
+$minCoFactor = 10000; // Минимальный сомножитель
 
 //Запуск скрипта
 $result = startUp($maxCoFactor, $minCoFactor);
@@ -51,7 +51,7 @@ function startUp($maxCoFactor, $minCoFactor)
 //Ищем простое число
 function checkPrime($number)
 {
-    for ($i = $number; $i >= 10; $i--)
+    for ($i = $number; $i >= 10000; $i--)
     {
         if(gmp_prob_prime($i) == '2')
         {
@@ -63,7 +63,6 @@ function checkPrime($number)
 // Переворачиваем строку и проверяем является ли произведение полиндромом
 function checkPalindrome($res)
 {
-
     if ($res == strrev($res))
     {
         return $res;
