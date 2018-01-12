@@ -1,17 +1,24 @@
 <?php
 
-// Запустить из консоли, командой "php palindrom.php 99999", где 99999 - необходимый, максимальный сомножитель
+// Запустить из консоли, командой "php palindrome2.php X" где X - кол-во знаков максимального сомножителя
 // При первом запуске скрипта, создается файл "data.json" с результатами вычислений, для более быстрого повторного использования скрипта
 
-$maxCoFactor = 0; // Максимальный сомножитель
-$minCoFactor = $maxCoFactor; // Минимальный сомножитель
-$firstCoFactor = $maxCoFactor; // Первый сомножитель
-$secondCoFactor = 2; // Второй сомножитель
-$maxResult = 0; // Максимальный палиндром
-$dateStart = microtime(true); // Время старта скрипта
-$maxMatrix = 0; // Максимальное значение сомножителя из файла с готовыми результатами
-$matrix = []; //Массив для результатов вычислений
-$arr = []; // Массив для проверки данных массива $matrix
+if (isset($argv[1]))
+{
+    $maxCoFactor = str_repeat('9', $argv[1]); // Максимальный сомножитель
+    $minCoFactor = '1'.str_repeat('0', mb_strlen($maxCoFactor)-1); // Минимальный сомножитель
+    $result['maxStr'] = $argv[1]; // кол-во знаков максимального сомножителя
+    $result['dateStart'] = microtime(true); // Время старта скрипта
+    $result['matrix'][$result['maxStr']] = []; //Готовые значения скрипта
+    $result['maxResult'] = 0; // Максимальный палиндром
+    $result['firstCoFactor'] = 0; // Первый сомножитель
+    $result['secondCoFactor'] = 0; // Второй сомножитель
+}
+else
+{
+    echo "Запустить из консоли, командой \"php palindrom.php X\", где X - кол-во знаков максимального сомножителя \n";
+    exit;
+}
 
 //Проверяем существует ли файл "data.json" с результатами вычислений
 if (file_exists(__DIR__.'/data.json'))
@@ -19,88 +26,128 @@ if (file_exists(__DIR__.'/data.json'))
     $file = file_get_contents(__DIR__.'/data.json', 'a+');
 
     // Записываем данные из файла в массив и находим максимальное значение сомножителя
-    $matrix = json_decode($file, TRUE);
-    $maxMatrix = max(array_keys($matrix));
-}
+    $result['matrix'] = json_decode($file, TRUE);
+    $maxMatrix = max(array_keys($result['matrix']));
 
-// Проверяем аргумент указанный при запуске скрипта
-if (isset($argv[1]))
-{
-    $maxCoFactor = $argv[1];
-
-    //Назначаем первый сомножитель
-    for ($max = $maxCoFactor; $max > $secondCoFactor; $max--)
+    //Проверяем, есть ли данные числа в массиве с результатами
+    if (!isset($result['matrix'][$result['maxStr']]))
     {
-        // Проверяем простое ли число
-        if(gmp_prob_prime($max) == '2')
+        //Запуск скрипта
+        $result = startUp($maxCoFactor, $minCoFactor, $result);
+
+        // Записываем обновленные данные вычислений в файл
+        file_put_contents(__DIR__.'/data.json', json_encode($result['matrix']));
+
+        //Вывод результатов
+        showResult($result);
+    }
+    else
+    {
+        // Перебираем массив с готовыми вычислениями, для нахождения максимального палиндрома
+        foreach ($result['matrix'][$result['maxStr']] as $k => $v)
         {
-            //Проверяем, есть ли данные числа в массиве с результатами
-            if ($maxMatrix < $max || !isset($matrix[$max]))
+            // Выбираем только нужные результаты из массива
+            if($k < $maxCoFactor)
             {
-                // Назначаем второй сомножитель
-                for ($min = $max; $min > $secondCoFactor; $min--)
+                foreach ($v as $i => $j)
                 {
-                    if(gmp_prob_prime($min) == '2')
-                    {
-                        // Вычисляем произведение сомножителей
-                        $res = $max * $min;
-
-                        // Переворачиваем строку и проверяем является ли произведение полиндромом
-                        if ($res == strrev($res))
-                        {
-                            // Записываем в переменную большее произведение и его сомножителей
-                            if ($maxResult <= $res)
-                            {
-                                $maxResult = $res;
-                                $firstCoFactor = $max;
-                                $secondCoFactor = $min;
-
-                                // "Запекание" результатов в массив для более быстрого повторного использования скрипта
-                                $matrix[$max][$min] = $res;
-                            }
-                            break;
-                        }
-                    }
+                    $arr[$j] = array($k, $i);
                 }
             }
-            else
-            {
-                // Перебираем массив с готовыми вычислениями, для нахождения максимального палиндрома
-                foreach ($matrix as $k => $v)
-                {
-                    // Выбираем только нужные результаты из массива
-                    if($k < $maxCoFactor)
-                    {
-                        foreach ($v as $i => $j)
-                        {
-                            $arr[$j] = array($k, $i);
-                        }
-                    }
-                }
+        }
 
-                // Проверяем находится ли максимальный палиндром в массиве с готовыми вычислениями
-                if ($maxResult < max(array_keys($arr)))
+        // Проверяем находится ли максимальный палиндром в массиве с готовыми вычислениями
+        if ($result['maxResult'] < max(array_keys($arr)))
+        {
+            $result['maxResult'] = max(array_keys($arr));
+            $result['firstCoFactor'] = $arr[$result['maxResult']][0];
+            $result['secondCoFactor'] = $arr[$result['maxResult']][1];
+        }
+
+        //Вывод результатов
+        showResult($result);
+    }
+}
+else
+{
+    //Запуск скрипта
+    $result = startUp($maxCoFactor, $minCoFactor, $result);
+
+    // Записываем обновленные данные вычислений в файл
+    file_put_contents(__DIR__.'/data.json', json_encode($result['matrix']));
+
+    //Вывод результатов
+    showResult($result);
+}
+
+
+function startUp($maxCoFactor, $minCoFactor, $result)
+{
+    //Назначаем первый сомножитель
+    for ($max = $maxCoFactor; $max > $minCoFactor; $max--)
+    {
+        //Ищем простое число
+        $max = checkPrime($max, $minCoFactor);
+
+        // Назначаем второй сомножитель
+        for ($min = $max; $min >= $minCoFactor; $min--)
+        {
+            $min = checkPrime($min, $minCoFactor);
+
+            // Вычисляем произведение сомножителей
+            $res = $max * $min;
+
+            //Проводим проверку на палиндром
+            if(checkPalindrome($res))
+            {
+                // Записываем в переменную больший палиндром и его сомножители
+                if ($result['maxResult'] <= $res)
                 {
-                    $maxResult = max(array_keys($arr));
-                    $firstCoFactor = $arr[$maxResult][0];
-                    $secondCoFactor = $arr[$maxResult][1];
+                    $result['maxResult'] = $res;
+                    $result['firstCoFactor'] = $max;
+                    $result['secondCoFactor'] = $min;
+                    $minCoFactor = $min;
+                    // "Запекание" результатов в массив для более быстрого повторного использования скрипта
+                    $result['matrix'][$result['maxStr']][$max][$min] = $res;
                 }
                 break;
             }
         }
     }
-    $dateStop = microtime(true) - $dateStart; // Время остановки скрипта
-
-    // Выводим результаты скрипта
-    echo "Результат: ".$maxResult."\n";
-    echo "Сомножители: ".$firstCoFactor.", ".$secondCoFactor."\n";
-    echo "Затраченное время: ".$dateStop."\n";
-
-    // Записываем обновленные данные вычислений в файл
-    file_put_contents(__DIR__.'/data.json', json_encode($matrix));
+    return $result;
 }
-else
+
+//Ищем простое число
+function checkPrime($number, $minCoFactor)
 {
-    echo "Запустить из консоли, командой \"php palindrom.php 99999\", где 99999 - необходимый, максимальный сомножитель \n";
+    for ($i = $number; $i >= $minCoFactor; $i--)
+    {
+        if(gmp_prob_prime($i) == '2')
+        {
+            return $i;
+        }
+    }
 }
+
+// Переворачиваем строку и проверяем является ли произведение полиндромом
+function checkPalindrome($res)
+{
+    if ($res == strrev($res))
+    {
+        return $res;
+    }
+    return false;
+}
+
+// Выводим результаты скрипта
+function showResult($result)
+{
+    $dateStop = microtime(true) - $result['dateStart']; // Время остановки скрипта
+    echo "Результат: ".$result['maxResult']."\n";
+    echo "Сомножители: ".$result['firstCoFactor'].", ".$result['secondCoFactor']."\n";
+    echo "Затраченное время: ".$dateStop."\n";
+}
+
+
+
 

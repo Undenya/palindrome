@@ -1,18 +1,25 @@
 <?php
 
-// Запустить из консоли, командой "php palindrome_hard.php"
+// Запустить из консоли, командой "php palindrome_hard.php x", где x - кол-во знаков максимального сомножителя
 
-$maxCoFactor = 99999; // Максимальный сомножитель
-$minCoFactor = 10000; // Минимальный сомножитель
-
-//Запуск скрипта
-$result = startUp($maxCoFactor, $minCoFactor);
-
-//Вывод результатов
-showResult($result);
-
-function startUp($maxCoFactor, $minCoFactor)
+if (isset($argv[1]))
 {
+    //Запуск скрипта
+    $result = startUp($argv[1]);
+
+    //Вывод результатов
+    showResult($result);
+}
+else
+{
+    echo "Запустить из консоли, командой \"php palindrom.php X\", где X - кол-во знаков максимального сомножителя \n";
+    exit;
+}
+
+function startUp($argv)
+{
+    $maxCoFactor = str_repeat('9', $argv); // Максимальный сомножитель
+    $minCoFactor = '1'.str_repeat('0', mb_strlen($maxCoFactor)-1); // Минимальный сомножитель
     $result['dateStart'] = microtime(true); // Время старта скрипта
     $result['maxResult'] = 0; // Максимальный палиндром
 
@@ -20,12 +27,12 @@ function startUp($maxCoFactor, $minCoFactor)
     for ($max = $maxCoFactor; $max > $minCoFactor; $max--)
     {
         //Ищем простое число
-        $max = checkPrime($max);
+        $max = checkPrime($max, $minCoFactor);
 
         // Назначаем второй сомножитель
         for ($min = $max; $min >= $minCoFactor; $min--)
         {
-            $min = checkPrime($min);
+            $min = checkPrime($min, $minCoFactor);
 
             // Вычисляем произведение сомножителей
             $res = $max * $min;
@@ -49,9 +56,9 @@ function startUp($maxCoFactor, $minCoFactor)
 }
 
 //Ищем простое число
-function checkPrime($number)
+function checkPrime($number, $minCoFactor)
 {
-    for ($i = $number; $i >= 10000; $i--)
+    for ($i = $number; $i >= $minCoFactor; $i--)
     {
         if(gmp_prob_prime($i) == '2')
         {
